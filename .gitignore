@@ -5,7 +5,6 @@ __pycache__/
 
 # C extensions
 *.so
-llama3-function-calling/embeddings/*
 llama3-function-calling/__pycache__
 llama3-function-calling/.venv
 # Distribution / packaging
