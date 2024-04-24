@@ -1,0 +1,9 @@
+llama-index
+unstructured
+llama-index-embeddings-huggingface
+llama-index
+llama-index-core
+llama-index-llms-ollama
+llama-index-llms-openai
+llama-index-embeddings-fastembed
+unstructured[pdf]
