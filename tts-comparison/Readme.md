@@ -9,7 +9,7 @@ This repository provides the necessary steps and code snippets for a YouTube tut
 1. **Clone Piper repository:**
 
 ```bash
-git clone https ://github.com/rhasspy/piper.git
+git clone https://github.com/rhasspy/piper.git
 cd piper
 ```
 
@@ -18,7 +18,7 @@ cd piper
 * Clone the `piper-phonemize` submodule:
 
 ```bash
-git clone git@ github.com:rhasspy/piper-phonemize.git pp
+git clone https://github.com/rhasspy/piper-phonemize.git pp
 cd pp
 ```
 
@@ -49,14 +49,6 @@ echo "testing one two three" | ./install/bin/piper_phonemize -l en-us --espeak-d
 ```
 
 4. **Build the Python package (with modifications):**
-
-* Create and activate a virtual environment:
-
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -U pip
-```
 
 * Apply patch to `setup. py`:
 
