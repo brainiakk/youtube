@@ -25,7 +25,7 @@ cd pp
 * Checkout specific commit:
 
 ```bash
-git checkout fccd4f335aa68ac0b72 600822f34d84363daa2bf -b my
+git checkout fccd4f335aa68ac0b72600822f34d84363daa2bf -b my
 ```
 
 * Build using `make`:
@@ -39,18 +39,18 @@ make
 * Set library path:
 
 ```bash
-export DYLD_ LIBRARY_PATH=`pwd`/install/lib/
+export DYLD_LIBRARY_PATH=`pwd`/install/lib/
 ```
 
 * Run test command with custom espeak-data path:
 
 ```bash
-echo "testing one two three" | ./install/bin/piper_phonemize -l en-us --espeak-data ./install/share/espeak -ng-data/
+echo "testing one two three" | ./install/bin/piper_phonemize -l en-us --espeak-data ./install/share/espeak-ng-data/
 ```
 
 4. **Build the Python package (with modifications):**
 
-* Apply patch to `setup. py`:
+* Apply patch to `setup.py`:
 
 ```bash
 patch -p1 <<EOF
@@ -74,24 +74,34 @@ pip install .
 * Copy espeak-ng-data:
 
 ```bash
-cp -rp ./install/share/espeak-ng-data venv/lib/python3.10/site-packages/piper _phonemize/espeak-ng-data 
+cp -rp ./install/share/espeak-ng-data ../../../.venv/lib/python3.9/site-packages/piper_phonemize/espeak-ng-data 
 ```
 
 5. **Install and use piper-tts:**
 
-* Install `piper-tts`:
+* Go back to piper/src/python_run directory & Install `piper-tts`:
 
 ```bash
-pip install piper-tts
+cd ../src/python_run
+pip install .
 ```
 
 * Generate speech and play audio:
 
 ```bash
-echo 'Welcome to the world of speech  synthesis!' | venv/bin/piper --model en_US-lessac-medium --output_file welcome.wav
-afplay welcome.wav
+echo 'Welcome to the world of speech  synthesis!' | piper --model modules/piper/models/en_GB/en_GB-cori-high.onnx --output_file welcome.wav
+```
+* Modified Export Path when in the project root directory:
+
+```bash
+export DYLD_LIBRARY_PATH=`pwd`modules/piper/pp/install/lib/
 ```
 
+* Modified Generate speech command with library path export, so it would work even on new terminal on project root directory:
+
+```bash
+export DYLD_LIBRARY_PATH=`pwd`modules/piper/pp/install/lib/ && echo 'Welcome to the world of speech  synthesis!' | piper --model modules/piper/models/en_GB/en_GB-cori-high.onnx --length-scale 0.9 --output_file welcome.wav
+```
 **Additional Notes:**
 
 * The specific commit and version numbers might change in the future. Adjust accordingly based on the latest releases. 
