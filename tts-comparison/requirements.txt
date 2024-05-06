@@ -2,3 +2,4 @@ pygame
 whisper_timestamped
 faster_whisper==0.9.0
 dtw-python==1.1.12
+wave
