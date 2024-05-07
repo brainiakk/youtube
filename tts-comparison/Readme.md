@@ -58,10 +58,10 @@ patch -p1 <<EOF
 +++ b/setup.py
 @@ -9 +9 @@ _DIR = Path(__file__).parent
 -_ESPEAK_DIR = _DIR / "espeak-ng" / "build"
-+ _ESPEAK_DIR = _DIR / "install"
++_ESPEAK_DIR = _DIR / "install"
 @@ -13 +13 @@ _ONNXRUNTIME_DIR = _LIB_DIR / "onnxruntime"
 -__version__ = "1.2.0"
-+__version__ = "1.1.0 "
++__version__ = "1.1.0"
 EOF
 ```
 
