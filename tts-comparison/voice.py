@@ -1,12 +1,14 @@
 import os
+import time
 import wave
 import pygame
 import torch
 from openvoice import se_extractor
 from openvoice.api import ToneColorConverter
 from melo.api import TTS
-import piper
 import subprocess
+# import piper
+
 class VoiceService:
     def __init__(self) -> None:
         # self._ckpt_converter = 'modules/openvoice/checkpoints_v2/converter'
@@ -56,69 +58,75 @@ class VoiceService:
     #                 message=encode_message)
     #             self.play(save_path)
                 
-    # def openvoice(self, text):
-    #     reference_speaker = 'modules/openvoice/resources/jarvis.wav' # This is the voice you want to clone
-    #     target_se, audio_name = se_extractor.get_se(reference_speaker, self._tone_color_converter, vad=True)
-    #     source_se = torch.load(f'modules/openvoice/checkpoints_v2/base_speakers/ses/en-newest.pth', map_location=self._device)
-    #     save_path = f'{self._output_dir}/output.wav'
-    #     src_path = self.melotts(text, standalone=False)
-    #     # Run the tone color converter
-    #     encode_message = "@MyShell"
-    #     self._tone_color_converter.convert(
-    #         audio_src_path=src_path, 
-    #         src_se=source_se, 
-    #         tgt_se=target_se, 
-    #         output_path=save_path,
-    #         message=encode_message)
-    #     self.play(save_path)
+    def openvoice(self, text):
+        reference_speaker = 'modules/openvoice/resources/jarvis.wav' # This is the voice you want to clone
+        target_se, audio_name = se_extractor.get_se(reference_speaker, self._tone_color_converter, vad=True)
+        source_se = torch.load(f'modules/openvoice/checkpoints_v2/base_speakers/ses/en-newest.pth', map_location=self._device)
+        save_path = f'{self._output_dir}/output.wav'
+        src_path = self.melotts(text, standalone=False)
+        # Run the tone color converter
+        encode_message = "@MyShell"
+        self._tone_color_converter.convert(
+            audio_src_path=src_path, 
+            src_se=source_se, 
+            tgt_se=target_se, 
+            output_path=save_path,
+            message=encode_message)
+        self.play(save_path)
 
     def pipertts_cli(self, text):
         try:
+            start = time.time()
             save_path = f'{self._output_dir}/output.wav'
-            command = f"""
-            export DYLD_LIBRARY_PATH=`pwd`/modules/piper/pp/install/lib/ && 
-            echo '{text}' |   piper --model modules/piper/models/en_US/en_US-libritts_r-medium.onnx -s 8 --length-scale 0.9 --output_file {save_path}
+            command = f""" export DYLD_LIBRARY_PATH=`pwd`/modules/piper/pp/install/lib/ && echo '{text}' | 
+            piper --model modules/piper/models/en_US/en_US-libritts_r-medium.onnx -s 8 --length-scale 0.9 --output_file {save_path}
             """
-            
             subprocess.run(command, shell=True)
+            end = time.time()
             self.play(save_path)
         finally:
+            print(f"⏰ Piper TTS CLI Execution Time: {end - start}s")
             print("Finished Speaking!")
             
-    def pipertts(self, text):
-        # Run the base speaker tts
-        try:
-
-            save_path = f'{self._output_dir}/piper2.wav'
-            model_path = 'modules/piper/models/'
-            model = 'en_US/en_US-libritts_r-medium.onnx'
             
-            synthesize_args = {
-                "speaker_id": 8,
-                "length_scale": 0.9,
-            }
 
-            voice = piper.PiperVoice.load(
-                model_path=model_path + model,
-                config_path=model_path + model + ".json",
-                use_cuda=False)
-
-            with wave.open(str(save_path), "wb") as wav_file:
-                voice.synthesize(text, wav_file, **synthesize_args)
-                
-            self.play(save_path)
-
-        finally:
-            print("Finished speaking!")
             
+    # def piper(self, text):
+    #     # Run the base speaker tts
+    #     try:
+
+    #         save_path = f'{self._output_dir}/piper2.wav'
+    #         model_path = 'modules/piper/models/'
+    #         model = 'en_US/en_US-libritts_r-medium.onnx'
+            
+    #         synthesize_args = {
+    #             "speaker_id": 8,
+    #             "length_scale": 0.9,
+    #         }
+
+    #         voice = piper.PiperVoice.load(
+    #             model_path=model_path + model,
+    #             config_path=model_path + model + ".json",
+    #             use_cuda=False)
+
+    #         with wave.open(str(save_path), "wb") as wav_file:
+    #             voice.synthesize(text, wav_file, **synthesize_args)
                 
+    #         self.play(save_path)
+
+    #     finally:
+    #         print("Finished speaking!")        
+            
     def melotts(self, text, standalone=True):
+        start = time.time()
         model = TTS(language="EN_NEWEST", device="cpu", ckpt_path="modules/melo/checkpoints/checkpoint.pth", config_path="modules/melo/checkpoints/config.json")
         src_path = f'{self._output_dir}/tmp.wav'
 
         # Speed is adjustable
         speed = 1.1
         model.tts_to_file(text, 3, src_path, speed=speed)
+        end = time.time()
+        print("⏰ Melo TTS Execution Time: ", end - start)
         return self.play(src_path) if standalone else src_path
                 
     def play(self, temp_audio_file):
