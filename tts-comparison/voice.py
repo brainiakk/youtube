@@ -3,11 +3,15 @@ import time
 import wave
 import pygame
 import torch
-from openvoice import se_extractor
-from openvoice.api import ToneColorConverter
-from melo.api import TTS
+# from openvoice import se_extractor
+# from openvoice.api import ToneColorConverter
+# from melo.api import TTS
+from transformers import AutoProcessor, BarkModel
 import subprocess
 # import piper
+from scipy.io.wavfile import write as write_wav
+os.environ["SUNO_OFFLOAD_CPU"] = "1"
+os.environ["SUNO_USE_SMALL_MODELS"] = "True"
 
 class VoiceService:
     def __init__(self) -> None:
@@ -58,35 +62,35 @@ class VoiceService:
     #                 message=encode_message)
     #             self.play(save_path)
                 
-    def openvoice(self, text):
-        reference_speaker = 'modules/openvoice/resources/jarvis.wav' # This is the voice you want to clone
-        target_se, audio_name = se_extractor.get_se(reference_speaker, self._tone_color_converter, vad=True)
-        source_se = torch.load(f'modules/openvoice/checkpoints_v2/base_speakers/ses/en-newest.pth', map_location=self._device)
-        save_path = f'{self._output_dir}/output.wav'
-        src_path = self.melotts(text, standalone=False)
-        # Run the tone color converter
-        encode_message = "@MyShell"
-        self._tone_color_converter.convert(
-            audio_src_path=src_path, 
-            src_se=source_se, 
-            tgt_se=target_se, 
-            output_path=save_path,
-            message=encode_message)
-        self.play(save_path)
+    # def openvoice(self, text):
+    #     reference_speaker = 'modules/openvoice/resources/jarvis.wav' # This is the voice you want to clone
+    #     target_se, audio_name = se_extractor.get_se(reference_speaker, self._tone_color_converter, vad=True)
+    #     source_se = torch.load(f'modules/openvoice/checkpoints_v2/base_speakers/ses/en-newest.pth', map_location=self._device)
+    #     save_path = f'{self._output_dir}/output.wav'
+    #     src_path = self.melotts(text, standalone=False)
+    #     # Run the tone color converter
+    #     encode_message = "@MyShell"
+    #     self._tone_color_converter.convert(
+    #         audio_src_path=src_path, 
+    #         src_se=source_se, 
+    #         tgt_se=target_se, 
+    #         output_path=save_path,
+    #         message=encode_message)
+    #     self.play(save_path)
 
-    def pipertts_cli(self, text):
-        try:
-            start = time.time()
-            save_path = f'{self._output_dir}/output.wav'
-            command = f""" export DYLD_LIBRARY_PATH=`pwd`/modules/piper/pp/install/lib/ && echo '{text}' | 
-            piper --model modules/piper/models/en_US/en_US-libritts_r-medium.onnx -s 8 --length-scale 0.9 --output_file {save_path}
-            """
-            subprocess.run(command, shell=True)
-            end = time.time()
-            self.play(save_path)
-        finally:
-            print(f"⏰ Piper TTS CLI Execution Time: {end - start}s")
-            print("Finished Speaking!")
+    # def pipertts_cli(self, text):
+    #     try:
+    #         start = time.time()
+    #         save_path = f'{self._output_dir}/output.wav'
+    #         command = f""" export DYLD_LIBRARY_PATH=`pwd`/modules/piper/pp/install/lib/ && echo '{text}' | 
+    #         piper --model modules/piper/models/en_US/en_US-libritts_r-medium.onnx -s 8 --length-scale 0.9 --output_file {save_path}
+    #         """
+    #         subprocess.run(command, shell=True)
+    #         end = time.time()
+    #         self.play(save_path)
+    #     finally:
+    #         print(f"⏰ Piper TTS CLI Execution Time: {end - start}s")
+    #         print("Finished Speaking!")
             
             
 
@@ -117,18 +121,33 @@ class VoiceService:
     #     finally:
     #         print("Finished speaking!")        
             
-    def melotts(self, text, standalone=True):
-        start = time.time()
-        model = TTS(language="EN_NEWEST", device="cpu", ckpt_path="modules/melo/checkpoints/checkpoint.pth", config_path="modules/melo/checkpoints/config.json")
-        src_path = f'{self._output_dir}/tmp.wav'
+    # def melotts(self, text, standalone=True):
+    #     start = time.time()
+    #     model = TTS(language="EN_NEWEST", device="cpu", ckpt_path="modules/melo/checkpoints/checkpoint.pth", config_path="modules/melo/checkpoints/config.json")
+    #     src_path = f'{self._output_dir}/tmp.wav'
 
-        # Speed is adjustable
-        speed = 1.1
-        model.tts_to_file(text, 3, src_path, speed=speed)
-        end = time.time()
-        print("⏰ Melo TTS Execution Time: ", end - start)
-        return self.play(src_path) if standalone else src_path
-                
+    #     # Speed is adjustable
+    #     speed = 1.1
+    #     model.tts_to_file(text, 3, src_path, speed=speed)
+    #     end = time.time()
+    #     print("⏰ Melo TTS Execution Time: ", end - start)
+    #     return self.play(src_path) if standalone else src_path
+    def bark(self, text: str):
+        save_path = self._output_dir+"/output-bark.wav"
+        processor = AutoProcessor.from_pretrained("bark-models")
+        model = BarkModel.from_pretrained("bark-models", local_files_only=True)
+
+        voice_preset = "v2/en_speaker_6"
+
+        inputs = processor(text, voice_preset=voice_preset)
+
+        audio_array = model.generate(**inputs)
+        audio_array = audio_array.cpu().numpy().squeeze() 
+        
+        sample_rate = model.generation_config.sample_rate
+        write_wav(save_path, rate=sample_rate, data=audio_array)     
+        self.play(save_path)
+             
     def play(self, temp_audio_file):
         
         pygame.mixer.init()

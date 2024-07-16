@@ -2,11 +2,26 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+tts-comparison/modules/melo/checkpoints
+tts-comparison/modules/openvoice/checkpoints_v2
 # C extensions
 *.so
+fish-speech-main
+tts-comparison/modules/fish-speech
+llama3-function-calling/embeddings/
 llama3-function-calling/__pycache__
 llama3-function-calling/.venv
+tts-comparison/__pycache__
+tts-comparison/.venv
+tts-comparison/processed
+langchain-agent
+mlx_bark/weights
+megamind_ai/
+whisper-cpp/
+llama-cpp-agent/
+langchain-google-vertex-ai
+mlx_bark/
+tts-comparison/bark-models/
 # Distribution / packaging
 .Python
 build/
