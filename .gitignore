@@ -6,6 +6,7 @@ tts-comparison/modules/melo/checkpoints
 tts-comparison/modules/openvoice/checkpoints_v2
 # C extensions
 *.so
+tts-comparison/modules/.DS_Store
 fish-speech-main
 tts-comparison/modules/fish-speech
 llama3-function-calling/embeddings/
